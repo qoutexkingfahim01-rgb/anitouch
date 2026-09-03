@@ -7,7 +7,6 @@ import { db } from '@/firebase/config';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 
-// বাংলাদেশের ৬৪টি জেলার তালিকা
 const BD_DISTRICTS = [
   'Bagerhat', 'Bandarban', 'Barguna', 'Barishal', 'Bhola', 'Bogura', 'Brahmanbaria', 'Chandpur', 'Chattogram', 'Chuadanga', 
   'Cumilla', "Cox's Bazar", 'Dhaka', 'Dinajpur', 'Faridpur', 'Feni', 'Gaibandha', 'Gazipur', 'Gopalganj', 'Habiganj', 
@@ -28,12 +27,13 @@ export default function Checkout() {
   const [formData, setFormData] = useState({
     fullName: user?.displayName || '',
     phone: '',
-    zone: 'inside', // ডিফল্টভাবে Inside Dhaka সিলেক্ট করা থাকবে
+    zone: 'inside', // inside or outside dhaka
     city: 'Dhaka',
-    address: ''
+    address: '',
+    paymentMethod: 'cod', // 'cod', 'bkash', 'nagad'
+    trxId: ''
   });
 
-  // ডাইনামিক শিপিং ফি লজিক: Inside হলে 70, Outside হলে 130
   const shippingFee = formData.zone === 'inside' ? 70 : 130;
   const totalAmount = getTotalPrice() + shippingFee;
 
@@ -50,7 +50,6 @@ export default function Checkout() {
     
     let newFormData = { ...formData, [name]: value };
 
-    // কাস্টমার যদি zone পরিবর্তন করে, তাহলে city অটোমেটিক আপডেট হবে
     if (name === 'zone') {
       if (value === 'inside') {
         newFormData.city = 'Dhaka';
@@ -67,6 +66,11 @@ export default function Checkout() {
     
     if (!formData.fullName || !formData.phone || !formData.address || !formData.city) {
       toast.error("Please fill in all shipping details");
+      return;
+    }
+
+    if ((formData.paymentMethod === 'bkash' || formData.paymentMethod === 'nagad') && !formData.trxId) {
+      toast.error("Please enter your Transaction ID (TrxID)");
       return;
     }
 
@@ -157,13 +161,59 @@ export default function Checkout() {
                   <textarea required name="address" rows={3} value={formData.address} onChange={handleInputChange} className="w-full border border-gray-300 p-3 text-sm focus:border-black focus:outline-none transition-colors resize-y rounded-lg" placeholder="House number, Street name, Area..."></textarea>
                 </div>
 
+                {/* Payment Methods */}
                 <div className="pt-4">
                   <h2 className="text-sm font-bold uppercase tracking-widest mb-4 border-b border-gray-100 pb-4">Payment Method</h2>
-                  <div className="border-2 border-black p-4 flex items-center justify-between bg-gray-50 rounded-lg">
-                    <span className="text-sm font-bold uppercase tracking-wider text-black">Cash on Delivery (COD)</span>
-                    <div className="w-4 h-4 rounded-full bg-black flex items-center justify-center">
-                      <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-                    </div>
+                  
+                  <div className="space-y-3">
+                    {/* COD */}
+                    <label className={`border-2 p-4 flex items-center justify-between rounded-lg cursor-pointer transition-all ${formData.paymentMethod === 'cod' ? 'border-black bg-gray-50' : 'border-gray-200'}`}>
+                      <div className="flex items-center gap-3">
+                        <input type="radio" name="paymentMethod" value="cod" checked={formData.paymentMethod === 'cod'} onChange={handleInputChange} className="accent-black" />
+                        <span className="text-sm font-bold uppercase tracking-wider text-black">Cash on Delivery (COD)</span>
+                      </div>
+                    </label>
+
+                    {/* bKash */}
+                    <label className={`border-2 p-4 flex flex-col rounded-lg cursor-pointer transition-all ${formData.paymentMethod === 'bkash' ? 'border-pink-600 bg-pink-50/30' : 'border-gray-200'}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <input type="radio" name="paymentMethod" value="bkash" checked={formData.paymentMethod === 'bkash'} onChange={handleInputChange} className="accent-pink-600" />
+                          <span className="text-sm font-bold uppercase tracking-wider text-pink-600">bKash Personal</span>
+                        </div>
+                        <span className="text-xs font-bold bg-pink-100 text-pink-700 px-2.5 py-1 rounded">Send Money</span>
+                      </div>
+                      {formData.paymentMethod === 'bkash' && (
+                        <div className="mt-4 pt-3 border-t border-pink-200 text-xs space-y-2">
+                          <p className="text-gray-700">Please send <strong className="text-black">৳ {totalAmount}</strong> to this bKash number: <strong className="text-pink-600 select-all">01843826892</strong></p>
+                          <div>
+                            <label className="block font-semibold text-gray-600 mb-1">Enter bKash Transaction ID (TrxID) *</label>
+                            <input type="text" name="trxId" value={formData.trxId} onChange={handleInputChange} placeholder="e.g. 9H74K3L2M1" className="w-full border border-pink-300 p-2.5 text-xs bg-white rounded-md focus:outline-none focus:border-pink-600 uppercase font-mono" />
+                          </div>
+                        </div>
+                      )}
+                    </label>
+
+                    {/* Nagad */}
+                    <label className={`border-2 p-4 flex flex-col rounded-lg cursor-pointer transition-all ${formData.paymentMethod === 'nagad' ? 'border-orange-600 bg-orange-50/30' : 'border-gray-200'}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <input type="radio" name="paymentMethod" value="nagad" checked={formData.paymentMethod === 'nagad'} onChange={handleInputChange} className="accent-orange-600" />
+                          <span className="text-sm font-bold uppercase tracking-wider text-orange-600">Nagad Personal</span>
+                        </div>
+                        <span className="text-xs font-bold bg-orange-100 text-orange-700 px-2.5 py-1 rounded">Send Money</span>
+                      </div>
+                      {formData.paymentMethod === 'nagad' && (
+                        <div className="mt-4 pt-3 border-t border-orange-200 text-xs space-y-2">
+                          <p className="text-gray-700">Please send <strong className="text-black">৳ {totalAmount}</strong> to this Nagad number: <strong className="text-orange-600 select-all">01946676234</strong></p>
+                          <div>
+                            <label className="block font-semibold text-gray-600 mb-1">Enter Nagad Transaction ID (TrxID) *</label>
+                            <input type="text" name="trxId" value={formData.trxId} onChange={handleInputChange} placeholder="e.g. 8N63J2K1L9" className="w-full border border-orange-300 p-2.5 text-xs bg-white rounded-md focus:outline-none focus:border-orange-600 uppercase font-mono" />
+                          </div>
+                        </div>
+                      )}
+                    </label>
+
                   </div>
                 </div>
 
