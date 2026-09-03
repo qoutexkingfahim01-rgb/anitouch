@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import toast from 'react-hot-toast';
-import { ShoppingCart, Clock, CheckCircle2, Truck, PackageCheck, XCircle } from 'lucide-react';
+import { Clock, CheckCircle2, Truck, PackageCheck, XCircle, CreditCard } from 'lucide-react';
 
 interface OrderItem {
   productId: string;
@@ -23,6 +23,9 @@ interface Order {
     phone: string;
     address: string;
     city: string;
+    zone?: string;
+    paymentMethod?: string;
+    trxId?: string;
   };
   items: OrderItem[];
   subtotal: number;
@@ -90,7 +93,7 @@ export default function AdminOrders() {
 
       <div className="mb-8">
         <h1 className="text-2xl font-black uppercase tracking-tight text-black mb-1">Customer Orders</h1>
-        <p className="text-gray-500 text-sm">View and manage customer orders and fulfillment statuses.</p>
+        <p className="text-gray-500 text-sm">View customer orders, payment methods, and TrxIDs.</p>
       </div>
 
       {loading ? (
@@ -120,41 +123,61 @@ export default function AdminOrders() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+              {/* Payment & Shipping Details */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <div className="text-xs space-y-1 text-gray-600">
                   <span className="font-bold text-black uppercase block mb-1">Shipping Address:</span>
                   <p>{order.customerInfo.address}</p>
-                  <p>City: {order.customerInfo.city}</p>
+                  <p>City / Zone: {order.customerInfo.city} ({order.customerInfo.zone === 'inside' ? 'Inside Dhaka' : 'Outside Dhaka'})</p>
                 </div>
-                <div className="col-span-2 space-y-3">
-                  <span className="font-bold text-black uppercase text-xs block">Ordered Items:</span>
-                  <div className="space-y-2">
-                    {order.items.map((item, idx) => (
-                      <div key={idx} className="flex justify-between items-center text-xs bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                        <div className="flex items-center gap-3">
-                          {item.image && <img src={item.image} alt={item.name} className="w-10 h-12 object-cover rounded" />}
-                          <div>
-                            <span className="font-bold text-black block">{item.name}</span>
-                            <span className="text-gray-500">Size: {item.size} | Color: {item.color} | Qty: {item.quantity}</span>
-                          </div>
-                        </div>
-                        <span className="font-bold text-black">৳ {item.price * item.quantity}</span>
-                      </div>
-                    ))}
+
+                <div className="text-xs space-y-1 text-gray-600">
+                  <span className="font-bold text-black uppercase block mb-1">Payment Info:</span>
+                  <p className="flex items-center gap-1 font-bold text-black">
+                    <CreditCard className="w-3.5 h-3.5 text-gray-500" />
+                    Method: {order.customerInfo.paymentMethod === 'cod' ? 'Cash on Delivery' : (order.customerInfo.paymentMethod ? order.customerInfo.paymentMethod.toUpperCase() : 'COD')}
+                  </p>
+                  {order.customerInfo.paymentMethod && order.customerInfo.paymentMethod !== 'cod' && (
+                    <p className="mt-1 bg-white p-2 rounded border border-gray-200 font-mono text-black">
+                      TrxID: <strong className="text-pink-600 select-all">{order.customerInfo.trxId || 'Not Provided'}</strong>
+                    </p>
+                  )}
+                </div>
+
+                <div className="text-xs space-y-1 text-gray-600 flex flex-col justify-between">
+                  <div>
+                    <span className="font-bold text-black uppercase block mb-1">Summary:</span>
+                    <p>Subtotal: ৳ {order.subtotal}</p>
+                    <p>Shipping: ৳ {order.shippingFee}</p>
                   </div>
+                  <p className="text-sm font-black text-black pt-2 border-t border-gray-200">Total: ৳ {order.totalAmount}</p>
                 </div>
               </div>
 
-              <div className="border-t border-gray-100 pt-4 flex justify-between items-center text-sm font-bold">
-                <span>Total Amount:</span>
-                <span className="text-lg">৳ {order.totalAmount}</span>
+              {/* Ordered Items */}
+              <div className="space-y-3">
+                <span className="font-bold text-black uppercase text-xs block">Ordered Items:</span>
+                <div className="space-y-2">
+                  {order.items.map((item, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-xs bg-white p-2.5 rounded-lg border border-gray-100">
+                      <div className="flex items-center gap-3">
+                        {item.image && <img src={item.image} alt={item.name} className="w-10 h-12 object-cover rounded" />}
+                        <div>
+                          <span className="font-bold text-black block">{item.name}</span>
+                          <span className="text-gray-500">Size: {item.size} | Color: {item.color} | Qty: {item.quantity}</span>
+                        </div>
+                      </div>
+                      <span className="font-bold text-black">৳ {item.price * item.quantity}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
+
             </div>
           ))}
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-xl p-16 text-center">
-          <ShoppingCart className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-bold text-black mb-1">No Orders Found</h3>
           <p className="text-gray-500 text-sm">Customer orders will appear here once placed.</p>
         </div>
