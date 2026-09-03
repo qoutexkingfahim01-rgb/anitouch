@@ -68,7 +68,6 @@ export default function ProductDetails() {
     toast.success("Added to cart successfully!");
   };
 
-  // ডেসক্রিপশনের **text** কে বোল্ড এবং লাইন ব্রেক ঠিক করার ফাংশন
   const formatDescription = (desc: string) => {
     if (!desc) return '';
     let formatted = desc.replace(/\*\*(.*?)\*\*/g, '<strong class="text-black font-bold">$1</strong>');
@@ -100,20 +99,20 @@ export default function ProductDetails() {
         <meta name="description" content={product.description.slice(0, 150)} />
       </Helmet>
 
-      <div className="container mx-auto px-4 lg:px-8 py-10 md:py-16">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+      <div className="container mx-auto px-4 lg:px-8 py-8 md:py-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
           
-          {/* Images Section (7 Columns) */}
-          <div className="lg:col-span-7 flex flex-col-reverse md:flex-row gap-4 sticky top-28">
+          {/* Images Section */}
+          <div className="lg:col-span-7 flex flex-col-reverse md:flex-row gap-4">
             {/* Thumbnails */}
             {product.images?.length > 1 && (
-              <div className="flex md:flex-col gap-3 overflow-x-auto md:w-24 md:flex-shrink-0 scrollbar-hide">
+              <div className="flex md:flex-col gap-3 overflow-x-auto md:w-24 md:flex-shrink-0 scrollbar-hide pb-2 md:pb-0">
                 {product.images.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setSelectedImage(img)}
                     className={cn(
-                      "w-20 h-24 md:w-full md:h-28 bg-gray-100 flex-shrink-0 overflow-hidden border-2 transition-all",
+                      "w-16 h-20 md:w-full md:h-28 bg-gray-100 flex-shrink-0 overflow-hidden border-2 transition-all rounded-lg",
                       selectedImage === img ? "border-black" : "border-transparent hover:border-gray-300"
                     )}
                   >
@@ -124,7 +123,7 @@ export default function ProductDetails() {
             )}
             
             {/* Main Image */}
-            <div className="flex-1 bg-[#F5F5F5] aspect-[4/5] relative overflow-hidden">
+            <div className="flex-1 bg-[#F5F5F5] w-full max-h-[500px] md:max-h-none aspect-[4/5] relative overflow-hidden rounded-xl">
               {selectedImage ? (
                 <img src={selectedImage} alt={product.name} className="w-full h-full object-cover" />
               ) : (
@@ -133,8 +132,8 @@ export default function ProductDetails() {
             </div>
           </div>
 
-          {/* Product Info Section (5 Columns) */}
-          <div className="lg:col-span-5 flex flex-col">
+          {/* Product Info Section */}
+          <div className="lg:col-span-5 flex flex-col pt-2 md:pt-0">
             <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight mb-3">{product.name}</h1>
             <p className="text-xl md:text-2xl font-bold text-black mb-6">৳ {product.price}</p>
             
@@ -156,7 +155,7 @@ export default function ProductDetails() {
                       key={size}
                       onClick={() => setSelectedSize(size)}
                       className={cn(
-                        "w-12 h-12 flex items-center justify-center text-sm font-bold border transition-all",
+                        "w-12 h-12 flex items-center justify-center text-sm font-bold border transition-all rounded-lg",
                         selectedSize === size 
                           ? "border-black bg-black text-white shadow-md" 
                           : "border-gray-200 bg-white text-black hover:border-black"
@@ -179,7 +178,7 @@ export default function ProductDetails() {
                       key={color}
                       onClick={() => setSelectedColor(color)}
                       className={cn(
-                        "px-5 h-10 flex items-center justify-center text-xs font-bold border transition-all uppercase",
+                        "px-5 h-10 flex items-center justify-center text-xs font-bold border transition-all uppercase rounded-lg",
                         selectedColor === color 
                           ? "border-black bg-black text-white shadow-md" 
                           : "border-gray-200 bg-white text-black hover:border-black"
@@ -195,7 +194,7 @@ export default function ProductDetails() {
             {/* Quantity */}
             <div className="mb-8 flex items-center gap-4">
               <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">Quantity</span>
-              <div className="flex items-center border border-gray-200 h-11 w-32 bg-white">
+              <div className="flex items-center border border-gray-200 h-11 w-32 bg-white rounded-lg overflow-hidden">
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="w-10 h-full flex items-center justify-center text-gray-500 hover:text-black transition-colors"
@@ -220,12 +219,12 @@ export default function ProductDetails() {
               <button 
                 onClick={handleAddToCart}
                 disabled={product.stock <= 0}
-                className="flex-1 h-14 bg-black text-white flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md"
+                className="flex-1 h-14 bg-black text-white flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest hover:bg-gray-800 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed shadow-md rounded-xl"
               >
                 <ShoppingBag className="w-4 h-4" />
                 {product.stock > 0 ? 'Add to Cart' : 'Sold Out'}
               </button>
-              <button className="w-14 h-14 border border-gray-200 flex items-center justify-center text-black hover:border-black transition-colors">
+              <button className="w-14 h-14 border border-gray-200 flex items-center justify-center text-black hover:border-black transition-colors rounded-xl">
                 <Heart className="w-5 h-5" />
               </button>
             </div>
