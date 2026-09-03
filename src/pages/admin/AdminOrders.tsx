@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { collection, getDocs, doc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import toast from 'react-hot-toast';
-import { Clock, CheckCircle2, Truck, PackageCheck, XCircle, CreditCard } from 'lucide-react';
+import { Clock, CheckCircle2, Truck, PackageCheck, XCircle, CreditCard, Calendar } from 'lucide-react';
 
 interface OrderItem {
   productId: string;
@@ -75,6 +75,23 @@ export default function AdminOrders() {
     }
   };
 
+  const formatOrderDate = (timestamp: any) => {
+    if (!timestamp) return 'Just now';
+    try {
+      const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        hour12: true
+      });
+    } catch (e) {
+      return 'Recent';
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'Pending': return <span className="bg-yellow-100 text-yellow-800 px-2.5 py-1 text-xs font-bold rounded-full flex items-center gap-1 w-fit"><Clock className="w-3 h-3"/> Pending</span>;
@@ -93,7 +110,7 @@ export default function AdminOrders() {
 
       <div className="mb-8">
         <h1 className="text-2xl font-black uppercase tracking-tight text-black mb-1">Customer Orders</h1>
-        <p className="text-gray-500 text-sm">View customer orders, payment methods, and TrxIDs.</p>
+        <p className="text-gray-500 text-sm">View customer orders, timestamps, payment methods, and TrxIDs.</p>
       </div>
 
       {loading ? (
@@ -107,6 +124,9 @@ export default function AdminOrders() {
               <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-gray-100 pb-4 mb-4 gap-4">
                 <div>
                   <span className="text-xs font-semibold text-gray-400 block">ORDER ID: {order.id}</span>
+                  <span className="text-xs font-medium text-gray-500 flex items-center gap-1 mt-0.5 mb-1">
+                    <Calendar className="w-3.5 h-3.5 text-gray-400" /> {formatOrderDate(order.createdAt)}
+                  </span>
                   <span className="text-sm font-bold text-black">{order.customerInfo.fullName} ({order.customerInfo.phone})</span>
                 </div>
                 <div className="flex items-center gap-4">
